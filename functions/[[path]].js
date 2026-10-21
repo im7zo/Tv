@@ -1,22 +1,28 @@
-export async function onRequest(context) {
-  const { request } = context;
+
+export async function onRequest({ request }) {
   const incoming = new URL(request.url);
-  
-  // رابط السيرفر الأساسي الخاص بك
   const target = new URL("http://78.154.103.36:9421");
+
   target.pathname = incoming.pathname;
   target.search = incoming.search;
 
-  const proxyRequest = new Request(target, {
-    method: request.method,
-    headers: request.headers,
-    body: request.method === "GET" || request.method === "HEAD" ? null : request.body,
-    redirect: "follow"
-  });
+  const headers = new Headers(request.headers);
+  headers.set("Host", "78.154.103.36:9421");
 
   try {
-    return await fetch(proxyRequest);
-  } catch (err) {
-    return new Response("Proxy Error: " + err.message, { status: 500 });
+    const response = await fetch(target.toString(), {
+      method: request.method,
+      headers,
+      body: ["GET", "HEAD"].includes(request.method)
+        ? undefined
+        : request.body,
+      redirect: "manual"
+    });
+
+    return response;
+  } catch (error) {
+    return new Response("Proxy error: " + error.message, {
+      status: 502
+    });
   }
 }
