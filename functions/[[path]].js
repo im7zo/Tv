@@ -7,10 +7,11 @@ export async function onRequest({ request }) {
   target.search = incoming.search;
 
   const headers = new Headers(request.headers);
-  headers.set("Host", "78.154.103.36:9421");
+  headers.set("X-Forwarded-Host", incoming.host);
+  headers.set("X-Forwarded-Proto", "https");
 
   try {
-    const response = await fetch(target.toString(), {
+    return await fetch(target.toString(), {
       method: request.method,
       headers,
       body: ["GET", "HEAD"].includes(request.method)
@@ -18,8 +19,6 @@ export async function onRequest({ request }) {
         : request.body,
       redirect: "manual"
     });
-
-    return response;
   } catch (error) {
     return new Response("Proxy error: " + error.message, {
       status: 502
