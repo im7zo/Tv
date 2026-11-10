@@ -1,5 +1,5 @@
 export async function onRequest() {
-  const target = "http://78.154.103.36:9421/";
+  const target = "https://e5s59x9hsk.apps.bot-hosting.cloud";
 
   try {
     const response = await fetch(target, {
