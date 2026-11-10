@@ -1,28 +1,33 @@
-export async function onRequest() {
+
+export async function onRequest(context) {
   const target = "https://e5s59x9hsk.apps.bot-hosting.cloud";
 
+  const url = new URL(context.request.url);
+  const targetUrl = target + url.pathname + url.search;
+
   try {
-    const response = await fetch(target, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html,application/xhtml+xml"
-      },
-      redirect: "manual"
+    const response = await fetch(targetUrl, {
+      method: context.request.method,
+      headers: context.request.headers,
+      body: ["GET", "HEAD"].includes(context.request.method)
+        ? undefined
+        : context.request.body,
+      redirect: "follow"
     });
 
-    const body = await response.text();
+    const headers = new Headers(response.headers);
 
-    return new Response(
-      "Status: " + response.status +
-      "\nContent-Type: " + (response.headers.get("content-type") || "unknown") +
-      "\n\n" + body.slice(0, 1000),
-      {
-        status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8" }
-      }
-    );
+    headers.delete("content-encoding");
+    headers.delete("content-length");
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+
   } catch (error) {
-    return new Response("Fetch failed: " + error.message, {
+    return new Response("Proxy Error: " + error.message, {
       status: 502
     });
   }
